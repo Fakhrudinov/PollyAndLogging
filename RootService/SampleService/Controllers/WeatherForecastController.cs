@@ -6,28 +6,26 @@ namespace SampleService.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
         private readonly ILogger<WeatherForecastController> _logger;
+        private RootServiceReference.RootServiceClient _httpClient;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(
+            ILogger<WeatherForecastController> logger, 
+            IHttpClientFactory httpClientFactory
+            )
         {
             _logger = logger;
+
+            _httpClient = new RootServiceReference.RootServiceClient(
+                "http://localhost:5075/",
+                httpClientFactory.CreateClient("RootServiceClientFirst"));
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        [HttpGet(Name = "GetWeatherForecastFirst")]
+        public async Task<ActionResult<IEnumerable<RootServiceReference.WeatherForecast>>> GetWeatherForecastFirst()
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-            {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+            _logger.LogInformation("WeatherForecastController GetWeatherForecastFirst called");
+            return Ok( await _httpClient.GetWeatherForecastAsync());
         }
     }
 }
